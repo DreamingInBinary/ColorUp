@@ -35,7 +35,15 @@ public final class ColorUp {
         }
         
         do {
-            try Folder.current.createFile(at: args.targetDirectory)
+            let file:File = try Folder.current.createFile(at: args.targetDirectory + ".swift")
+            
+            let generatedCode = """
+            func aMethod() -> Void {
+                print()
+            }
+            """.data(using: .utf8)
+            
+            try file.write(generatedCode!)
         } catch {
             throw Error.failedToCreateFile
         }

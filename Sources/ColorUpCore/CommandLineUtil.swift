@@ -9,7 +9,6 @@ import Foundation
 import TSCUtility
 
 public struct CommandLineUtil {
-    // The first argument is always the executable, drop it
     let arguments = Array(ProcessInfo.processInfo.arguments.dropFirst())
     
     private let parser = ArgumentParser(usage: "<options>", overview: "Creates a generated extension for UIColor based on the colors in your project's asset catalog.")
