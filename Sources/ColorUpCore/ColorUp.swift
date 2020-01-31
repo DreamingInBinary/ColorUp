@@ -42,12 +42,26 @@ public final class ColorUp {
                 let assetFolder = try Folder.current.subfolder(at: "TestCatalog.xcassets/")
                 let colorFolders = assetFolder.subfolders.filter { $0.name.contains(".colorset") }
                 
-                var testString = ""
+                var testString = """
+                import Foundation
+                import UIKit
+                
+                extension UIColor : CodedColors {
+                """
                 try colorFolders.forEach { colorFolder in
-                    let colorFile = try colorFolder.file(at: "Contents.json")
-                    let colorData = try colorFile.read()
-                    testString += String(data: colorData, encoding: .utf8) ?? "OH"
+//                    let colorFile = try colorFolder.file(at: "Contents.json")
+//                    let colorData = try colorFile.read()
+//                    testString += String(data: colorData, encoding: .utf8) ?? "OH"
+                    let name = colorFolder.nameExcludingExtension
+                    testString += """
+                        
+                        class func cu_\(name)() -> UIColor {
+                            return UIColor(named: "\(name)")
+                        }
+                    
+                    """
                 }
+                testString += "}"
                 
                 // Finally generate the file
                 let file:File = try Folder.current.createFile(at: args.targetDirectory + ".swift")

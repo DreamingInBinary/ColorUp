@@ -9,6 +9,7 @@ import Foundation
 
 struct ColorAsset : Codable {
     let color:String
+    let idiom:String
     let red:String
     let green:String
     let blue:String
