@@ -10,15 +10,19 @@ import TSCUtility
 
 public struct CommandLineUtil {
     let arguments = Array(ProcessInfo.processInfo.arguments.dropFirst())
-    
     private let parser = ArgumentParser(usage: "<options>", overview: "Creates a generated extension for UIColor based on the colors in your project's asset catalog.")
     
-    // Command line variables and options
-    private let fileName: OptionArgument<String>
+    // MARK: Command Line Args
+    
+    /// The location of the Xcode project to parse. Required.
+    private let targetProjectDirectory: OptionArgument<String>
+    
+    //private let fileName: OptionArgument<String>
     //let uppercased: OptionArgument<Bool> = parser.add(option: "--uppercased", kind: Bool.self)
     
     init() {
-        fileName = parser.add(option: "--fileName", shortName: "-f", kind: String.self, usage: "The name of the generated file")
+//        fileName = parser.add(option: "--fileName", shortName: "-f", kind: String.self, usage: "The name of the generated file")
+        targetProjectDirectory = parser.add(option: "--project", shortName: "-p", kind: String.self, usage: "The location of the project that contains the Asset Catalog to use for code generation.")
         
     }
     
@@ -27,8 +31,8 @@ public struct CommandLineUtil {
         do {
             let parsedArguments = try parser.parse(arguments)
             
-            if let name = parsedArguments.get(fileName) {
-                return FileGenOptions(targetDirectory: name)
+            if let project = parsedArguments.get(targetProjectDirectory) {
+                return FileGenOptions(targetDirectory: project)
             } else {
                 return FileGenOptions(targetDirectory: "")
             }
