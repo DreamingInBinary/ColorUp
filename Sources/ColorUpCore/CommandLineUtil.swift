@@ -14,28 +14,28 @@ public struct CommandLineUtil {
     
     // MARK: Command Line Args
     
+    /// The desired name of the resulting code file. Defaults to "ColorCatalogExtensions".
+    private let fileName: OptionArgument<String>
     /// The location of the Xcode project to parse. Required.
     private let targetProjectDirectory: OptionArgument<String>
-    
-    //private let fileName: OptionArgument<String>
-    //let uppercased: OptionArgument<Bool> = parser.add(option: "--uppercased", kind: Bool.self)
-    
+    /// The language preference. Defaults to Swift.
+    private let languageObjc: OptionArgument<Bool>
+
     init() {
-//        fileName = parser.add(option: "--fileName", shortName: "-f", kind: String.self, usage: "The name of the generated file")
-        targetProjectDirectory = parser.add(option: "--project", shortName: "-p", kind: String.self, usage: "The location of the project that contains the Asset Catalog to use for code generation.")
-        
+        fileName = parser.add(option: "--fileName", shortName: "-f", kind: String.self, usage: "The name of the generated file. Defaults to \"ColorCatalogExtensions\".")
+        targetProjectDirectory = parser.add(option: "--project", shortName: "-p", kind: String.self, usage: "The location of the project's .xcasset folder that contains the colors to use for code generation.")
+        languageObjc = parser.add(option: "--useObjC", shortName: "-objc", kind: Bool.self, usage: "If passed, the code will be generated in Objective-C.")
     }
     
     // MARK: Public API
+    
     public func evaluateCommandLine() -> FileGenOptions {
         do {
             let parsedArguments = try parser.parse(arguments)
+            let projectDirectory = parsedArguments.get(targetProjectDirectory) ?? ""
+            let wantsObjC = parsedArguments.get(languageObjc) ?? false
             
-            if let project = parsedArguments.get(targetProjectDirectory) {
-                return FileGenOptions(targetDirectory: project)
-            } else {
-                return FileGenOptions(targetDirectory: "")
-            }
+            return FileGenOptions(targetDirectory: projectDirectory, useObjC: wantsObjC)
         }
         catch let error as ArgumentParserError {
             print(error.description)
@@ -49,7 +49,8 @@ public struct CommandLineUtil {
 }
 
 public struct FileGenOptions {
-    // A struct that represents the options the user passed in
+    var generatedFileName:String = "ColorCatalogExtensions"
     var targetDirectory:String = ""
+    var useObjC:Bool = false
 }
 

@@ -42,37 +42,16 @@ public final class ColorUp {
                 let assetFolder = try Folder.current.subfolder(at: "TestCatalog.xcassets/")
                 let colorFolders = assetFolder.subfolders.filter { $0.name.contains(".colorset") }
                 
-                var testString = """
-                import Foundation
-                import UIKit
+                var code = generateCodeStartInSwift()
                 
-                extension UIColor : CodedColors {
-                """
-                try colorFolders.forEach { colorFolder in
-//                    let colorFile = try colorFolder.file(at: "Contents.json")
-//                    let colorData = try colorFile.read()
-//                    testString += String(data: colorData, encoding: .utf8) ?? "OH"
+                colorFolders.forEach { colorFolder in
                     let name = colorFolder.nameExcludingExtension
-                    testString += """
-                        
-                        class func cu_\(name)() -> UIColor {
-                            return UIColor(named: "\(name)")
-                        }
-                    
-                    """
+                    code += generateSwiftColor(from: name)
                 }
-                testString += "}"
+                code += "}"
                 
                 // Finally generate the file
-                let file:File = try Folder.current.createFile(at: args.targetDirectory + ".swift")
-                
-//                let generatedCode = """
-//                func aMethod() -> Void {
-//                    print()
-//                }
-//                """.data(using: .utf8)
-                
-                try file.write(testString.data(using: .utf8)!)
+                try writeGeneratedSwiftCodeToDisk(code: code, withOptions: args)
             } catch {
                 throw Error.targetProjectDoesntExist
             }
@@ -80,4 +59,43 @@ public final class ColorUp {
             throw Error.failedToCreateFile
         }
     }
+}
+
+// MARK: Code Generation
+
+fileprivate func generateCodeStartInSwift() -> String {
+    return """
+    import Foundation
+    import UIKit
+    
+    extension UIColor : CodedColors {
+    """
+}
+
+fileprivate func generateSwiftColor(from colorName:String) -> String {
+    return """
+        
+        class func cu_\(colorName)() -> UIColor {
+            return UIColor(named: "\(colorName)")
+        }
+    
+    """
+}
+
+fileprivate func writeGeneratedSwiftCodeToDisk(code:String, withOptions args:FileGenOptions) throws {
+    let file:File = try Folder.current.createFile(at: args.generatedFileName + ".swift")
+    try file.write(code.data(using: .utf8)!)
+}
+
+fileprivate func generateCodeStartInObjC() -> String {
+    return """
+    #import <Foundation/Foundation.h>
+    #import <UIKit/UIKit.h>
+    
+    @interface UIColor (CodedColors)
+    """
+}
+
+fileprivate func generateObjCColor(from colorName:String) -> String {
+    return ""
 }
