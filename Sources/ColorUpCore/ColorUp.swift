@@ -42,11 +42,11 @@ public final class ColorUp {
                 let assetFolder = try Folder.current.subfolder(at: "TestCatalog.xcassets/")
                 let colorFolders = assetFolder.subfolders.filter { $0.name.contains(".colorset") }
                 
-                var code = generateCodeStartInSwift()
+                var code = generateCodeStartInSwift(with: args.generatedFileName)
                 
                 colorFolders.forEach { colorFolder in
                     let name = colorFolder.nameExcludingExtension
-                    code += generateSwiftColor(from: name)
+                    code += generateSwiftColor(from: name, withOptions: args)
                 }
                 code += "}"
                 
@@ -63,20 +63,29 @@ public final class ColorUp {
 
 // MARK: Code Generation
 
-fileprivate func generateCodeStartInSwift() -> String {
+fileprivate func generateCodeStartInSwift(with fileName:String) -> String {
     return """
     import Foundation
     import UIKit
     
-    extension UIColor : CodedColors {
+    extension UIColor : \(fileName) {
     """
 }
 
-fileprivate func generateSwiftColor(from colorName:String) -> String {
+fileprivate func generateSwiftColor(from colorName:String, withOptions args:FileGenOptions) -> String {
+    let signature:String
+    let forceUnwrapModifidier = args.useForceUnwrap ? "" : "?"
+    
+    if (args.functionPrefix.isEmpty) {
+        signature = "class func \(colorName)() -> UIColor\(forceUnwrapModifidier) {"
+    } else {
+        signature = "class func \(args.functionPrefix)\(colorName)() -> UIColor\(forceUnwrapModifidier) {"
+    }
+    
     return """
         
-        class func cu_\(colorName)() -> UIColor {
-            return UIColor(named: "\(colorName)")
+        \(signature)
+            return UIColor(named: "\(colorName)")\(args.useForceUnwrap ? "!" : "")
         }
     
     """
@@ -85,17 +94,4 @@ fileprivate func generateSwiftColor(from colorName:String) -> String {
 fileprivate func writeGeneratedSwiftCodeToDisk(code:String, withOptions args:FileGenOptions) throws {
     let file:File = try Folder.current.createFile(at: args.generatedFileName + ".swift")
     try file.write(code.data(using: .utf8)!)
-}
-
-fileprivate func generateCodeStartInObjC() -> String {
-    return """
-    #import <Foundation/Foundation.h>
-    #import <UIKit/UIKit.h>
-    
-    @interface UIColor (CodedColors)
-    """
-}
-
-fileprivate func generateObjCColor(from colorName:String) -> String {
-    return ""
 }

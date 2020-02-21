@@ -19,12 +19,15 @@ public struct CommandLineUtil {
     /// The location of the Xcode project to parse. Required.
     private let targetProjectDirectory: OptionArgument<String>
     /// The language preference. Defaults to Swift.
-    private let languageObjc: OptionArgument<Bool>
+    private let useForceUnwrapping: OptionArgument<Bool>
+    /// An optional prefix to apply to each function call.
+    private let functionPrefix: OptionArgument<String>
 
     init() {
-        fileName = parser.add(option: "--fileName", shortName: "-f", kind: String.self, usage: "The name of the generated file. Defaults to \"ColorCatalogExtensions\".")
+        fileName = parser.add(option: "--fileName", shortName: "-f", kind: String.self, usage: "Required. The name of the generated file. Defaults to \"ColorCatalogExtensions\".")
         targetProjectDirectory = parser.add(option: "--project", shortName: "-p", kind: String.self, usage: "The location of the project's .xcasset folder that contains the colors to use for code generation.")
-        languageObjc = parser.add(option: "--useObjC", shortName: "-objc", kind: Bool.self, usage: "If passed, the code will be generated in Objective-C.")
+        useForceUnwrapping = parser.add(option: "--forceUnwrap", shortName: "-force", kind: Bool.self, usage: "If passed, the code will force unwrap the color in its implementation.")
+        functionPrefix = parser.add(option: "--prefix", shortName: "-fp", kind: String.self, usage: "An optional prefix to apply to each function's header.")
     }
     
     // MARK: Public API
@@ -33,9 +36,10 @@ public struct CommandLineUtil {
         do {
             let parsedArguments = try parser.parse(arguments)
             let projectDirectory = parsedArguments.get(targetProjectDirectory) ?? ""
-            let wantsObjC = parsedArguments.get(languageObjc) ?? false
+            let prefersForceUnwrap = parsedArguments.get(useForceUnwrapping) ?? false
+            let prefix = parsedArguments.get(functionPrefix) ?? ""
             
-            return FileGenOptions(targetDirectory: projectDirectory, useObjC: wantsObjC)
+            return FileGenOptions(targetDirectory: projectDirectory, useForceUnwrap: prefersForceUnwrap, functionPrefix: prefix)
         }
         catch let error as ArgumentParserError {
             print(error.description)
@@ -51,6 +55,7 @@ public struct CommandLineUtil {
 public struct FileGenOptions {
     var generatedFileName:String = "ColorCatalogExtensions"
     var targetDirectory:String = ""
-    var useObjC:Bool = false
+    var useForceUnwrap:Bool = false
+    var functionPrefix:String = ""
 }
 
