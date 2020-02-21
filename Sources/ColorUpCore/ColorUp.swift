@@ -43,7 +43,7 @@ public final class ColorUp {
         do {
             // Get into the project
             do {
-                let assetFolder = try Folder.root.subfolder(named: "users/jordan/documents/buffer/crossover-ios/app/crossover/assets.xcassets/"/*args.targetDirectory*/)
+                let assetFolder = try Folder.root.subfolder(named: args.targetDirectory)
                 let colorFolders = assetFolder.subfolders.filter { $0.name.contains(".colorset") }
                 
                 var code = generateCodeStartInSwift(with: args.generatedFileName)
