@@ -12,6 +12,7 @@ public extension ColorUp {
     enum Error: Swift.Error {
         case noArguments
         case missingTargetProjectName
+        case missingSaveLocation
         case targetProjectDoesntExist
         case failedToCreateFile
     }
@@ -30,16 +31,19 @@ public final class ColorUp {
         guard !commandLine.arguments.isEmpty else {
             throw Error.noArguments
         }
-        
+
         guard args.targetDirectory != "" else {
             throw Error.missingTargetProjectName
         }
         
+        guard args.targetSaveLocation != "" else {
+            throw Error.missingTargetProjectName
+        }
+        
         do {
-            // Test: /Users/jordan/Documents/Projects/ColorUp/TestCatalog.xcassets/Color.colorset
             // Get into the project
             do {
-                let assetFolder = try Folder.current.subfolder(at: "TestCatalog.xcassets/")
+                let assetFolder = try Folder.root.subfolder(named: "users/jordan/documents/buffer/crossover-ios/app/crossover/assets.xcassets/"/*args.targetDirectory*/)
                 let colorFolders = assetFolder.subfolders.filter { $0.name.contains(".colorset") }
                 
                 var code = generateCodeStartInSwift(with: args.generatedFileName)
@@ -64,11 +68,21 @@ public final class ColorUp {
 // MARK: Code Generation
 
 fileprivate func generateCodeStartInSwift(with fileName:String) -> String {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "MMM dd yyyy"
+    
     return """
-    import Foundation
+    //
+    //  \(fileName).swift
+    //  Crossover
+    //
+    //  GENERATED CODE: Any edits will be overwritten.
+    //  Generated on \(dateFormatter.string(from: Date()))
+    //
+    
     import UIKit
     
-    extension UIColor : \(fileName) {
+    extension UIColor {
     """
 }
 
@@ -77,9 +91,9 @@ fileprivate func generateSwiftColor(from colorName:String, withOptions args:File
     let forceUnwrapModifidier = args.useForceUnwrap ? "" : "?"
     
     if (args.functionPrefix.isEmpty) {
-        signature = "class func \(colorName)() -> UIColor\(forceUnwrapModifidier) {"
+        signature = "class var \(colorName) : UIColor\(forceUnwrapModifidier) {"
     } else {
-        signature = "class func \(args.functionPrefix)\(colorName)() -> UIColor\(forceUnwrapModifidier) {"
+        signature = "class var \(args.functionPrefix)\(colorName) : UIColor\(forceUnwrapModifidier) {"
     }
     
     return """
@@ -92,6 +106,7 @@ fileprivate func generateSwiftColor(from colorName:String, withOptions args:File
 }
 
 fileprivate func writeGeneratedSwiftCodeToDisk(code:String, withOptions args:FileGenOptions) throws {
-    let file:File = try Folder.current.createFile(at: args.generatedFileName + ".swift")
+    let folder:Folder = try Folder.root.subfolder(at: args.targetSaveLocation)
+    let file:File = try folder.createFile(at: args.generatedFileName + ".swift")
     try file.write(code.data(using: .utf8)!)
 }
