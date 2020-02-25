@@ -30,7 +30,6 @@ To get a feel for what you can use, run the `--help` command:
 ```bash
 $ swift run ColorUp --help
 ```
-
 Here is what a command would look like:
 ```bash
 $ swift run ColorUp -p "users/jordan/documents/anApp/assets.xcassets/" -s "users/jordan/documents/anApp/extensions/"
@@ -54,6 +53,14 @@ extension UIColor {
     }
 }
 ```
+
+If you'd like to run ColorUp from anywhere and not have to nagivate to its location on the file system, you build it for release and move it to the executable binaries folder:
+```bash
+$ swift build -c release
+$ cp .build/release/ColorUp /usr/local/bin/ColorUp
+```
+
+This allows you to just open Terminal and run it from anywhere.
 ### Options
 
 **Xcode Project: Required**
