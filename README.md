@@ -50,11 +50,10 @@ Here is what a command would look like:
 $ swift run ColorUp -p "users/jordan/documents/anApp/assets.xcassets/" -s "users/jordan/documents/anApp/extensions/"
 ```
 
-If the asset catalog has one color named "MyColor", the result would look like this for UIKit (and similar for SwiftUI):
+If the asset catalog has one color named "MyColor", the result would look like this for UIKit:
 ```swift
 //
-//  ColorCatalogExtensions.swift
-//  Crossover
+//  ColorCatalogExtensions-UIKit.swift
 //
 //  GENERATED CODE: Any edits will be overwritten.
 //  Generated on Feb 21 2020
@@ -65,6 +64,24 @@ import UIKit
 extension UIColor {    
     class var MyColor : UIColor? {
         return UIColor(named: "MyColor")
+    }
+}
+```
+
+...and for SwiftUI:
+```swift
+//
+//  ColorCatalogExtensions-SwiftUI.swift
+//
+//  GENERATED CODE: Any edits will be overwritten.
+//  Generated on Feb 21 2020
+//
+
+import SwiftUI
+
+extension Color {    
+    static var MyColor : Color {
+        return Color("MyColor")
     }
 }
 ```
