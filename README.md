@@ -1,6 +1,10 @@
 # ColorUp
 An easy way to generate an extension for `UIColor` based off of your colors within the project's asset catalog.
 
+<p align="center">
+  <img src="/hero.png?raw=true" alt="Header Image" />
+</p>
+
 ### Motivations
 At [Buffer](https://www.buffer.com) we use color catalogs extensively across our own iOS apps. But, we find that we often can mistype the names (resulting in a nil color instance) and that we have quite a few of them. This is the main problem we set out to solve. Using a generator such as this gives us the flexibility of color catalogs with the advantages of concrete function calls:
 
