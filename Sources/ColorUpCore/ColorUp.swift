@@ -20,6 +20,7 @@ public extension ColorUp {
 
 public final class ColorUp {
     private let commandLine = CommandLineUtil()
+    private let codeGen = CodeGenerator()
     
     public init() {}
     
@@ -46,16 +47,16 @@ public final class ColorUp {
                 let assetFolder = try Folder.root.subfolder(named: args.targetDirectory)
                 let colorFolders = assetFolder.subfolders.filter { $0.name.contains(".colorset") }
                 
-                var code = generateCodeStartInSwift(with: args.generatedFileName)
-                
+                var code:String = codeGen.generateStartOfCodeFileInSwift(with: args)
+
                 colorFolders.forEach { colorFolder in
                     let name = colorFolder.nameExcludingExtension
-                    code += generateSwiftColor(from: name, withOptions: args)
+                    code += codeGen.generateColorCatalogMember(from: name, withOptions: args)
                 }
                 code += "}"
                 
                 // Finally generate the file
-                try writeGeneratedSwiftCodeToDisk(code: code, withOptions: args)
+                try codeGen.writeGeneratedSwiftCodeToDisk(code: code, withOptions: args)
             } catch {
                 throw Error.targetProjectDoesntExist
             }
@@ -67,46 +68,76 @@ public final class ColorUp {
 
 // MARK: Code Generation
 
-fileprivate func generateCodeStartInSwift(with fileName:String) -> String {
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "MMM dd yyyy"
-    
-    return """
-    //
-    //  \(fileName).swift
-    //  Crossover
-    //
-    //  GENERATED CODE: Any edits will be overwritten.
-    //  Generated on \(dateFormatter.string(from: Date()))
-    //
-    
-    import UIKit
-    
-    extension UIColor {
-    """
-}
+private struct CodeGenerator {
+    // MARK: Public
+    func generateStartOfCodeFileInSwift(with args:FileGenOptions) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMM dd yyyy"
+        
+        return """
+        //
+        //  \(args.generatedFileName)-\(args.useSwiftUI ? "SwiftUI" : "UIKit").swift
+        //
+        //  GENERATED CODE: Any edits will be overwritten.
+        //  Generated on \(dateFormatter.string(from: Date()))
+        //
+        
+        import \(args.useSwiftUI ? "SwiftUI" : "UIKit")
+        
+        extension \(args.useSwiftUI ? "Color" : "UIColor") {
+        """
+    }
 
-fileprivate func generateSwiftColor(from colorName:String, withOptions args:FileGenOptions) -> String {
-    let signature:String
-    let forceUnwrapModifidier = args.useForceUnwrap ? "" : "?"
-    
-    if (args.functionPrefix.isEmpty) {
-        signature = "class var \(colorName) : UIColor\(forceUnwrapModifidier) {"
-    } else {
-        signature = "class var \(args.functionPrefix)\(colorName) : UIColor\(forceUnwrapModifidier) {"
+    func generateColorCatalogMember(from colorName:String, withOptions args:FileGenOptions) -> String {
+        if args.useSwiftUI {
+            return generateSwiftUIColor(from: colorName, withOptions: args)
+        } else {
+            return generateSwiftUIKitColor(from: colorName, withOptions: args)
+        }
     }
     
-    return """
-        
-        \(signature)
-            return UIColor(named: "\(colorName)")\(args.useForceUnwrap ? "!" : "")
-        }
-    
-    """
-}
+    func writeGeneratedSwiftCodeToDisk(code:String, withOptions args:FileGenOptions) throws {
+        let folder:Folder = try Folder.root.subfolder(at: args.targetSaveLocation)
+        let appendedFramework = args.useSwiftUI ? "-SwiftUI" : "-UIKit"
+        let file:File = try folder.createFile(at: args.generatedFileName + appendedFramework + ".swift")
+        try file.write(code.data(using: .utf8)!)
+    }
 
-fileprivate func writeGeneratedSwiftCodeToDisk(code:String, withOptions args:FileGenOptions) throws {
-    let folder:Folder = try Folder.root.subfolder(at: args.targetSaveLocation)
-    let file:File = try folder.createFile(at: args.generatedFileName + ".swift")
-    try file.write(code.data(using: .utf8)!)
+    // MARK: Private
+    private func generateSwiftUIKitColor(from colorName:String, withOptions args:FileGenOptions) -> String {
+        let signature:String
+        let forceUnwrapModifidier = args.useForceUnwrap ? "" : "?"
+        
+        if (args.functionPrefix.isEmpty) {
+            signature = "class var \(colorName) : UIColor\(forceUnwrapModifidier) {"
+        } else {
+            signature = "class var \(args.functionPrefix)\(colorName) : UIColor\(forceUnwrapModifidier) {"
+        }
+        
+        return """
+            
+            \(signature)
+                return UIColor(named: "\(colorName)")\(args.useForceUnwrap ? "!" : "")
+            }
+        
+        """
+    }
+
+    private func generateSwiftUIColor(from colorName:String, withOptions args:FileGenOptions) -> String {
+        let signature:String
+
+        if (args.functionPrefix.isEmpty) {
+            signature = "static var \(colorName) : Color {"
+        } else {
+            signature = "static var \(args.functionPrefix)\(colorName) : Color {"
+        }
+        
+        return """
+            
+            \(signature)
+                return Color("\(colorName)")
+            }
+        
+        """
+    }
 }

@@ -10,7 +10,7 @@ import TSCUtility
 
 public struct CommandLineUtil {
     let arguments = Array(ProcessInfo.processInfo.arguments.dropFirst())
-    private let parser = ArgumentParser(usage: "<options>", overview: "Creates a generated extension for UIColor based on the colors in your project's asset catalog.")
+    private let parser = ArgumentParser(usage: "<options>", overview: "Creates a generated extension for UIKit's UIColor or SwiftUI's Color based on the colors in your project's asset catalog.")
     
     // MARK: Command Line Args
     
@@ -24,6 +24,8 @@ public struct CommandLineUtil {
     private let useForceUnwrapping: OptionArgument<Bool>
     /// An optional prefix to apply to each function call.
     private let functionPrefix: OptionArgument<String>
+    /// A boolean indicating whether to generate SwiftUI or UIKit color extensions.
+    private let frameworkChoice: OptionArgument<Bool>
 
     init() {
         fileName = parser.add(option: "--fileName", shortName: "-f", kind: String.self, usage: "The name of the generated file. Defaults to \"ColorCatalogExtensions\".")
@@ -31,6 +33,7 @@ public struct CommandLineUtil {
         targetSaveLocation = parser.add(option: "--saveLocation", shortName: "-s", kind: String.self, usage: "Required: A fully formed location on disk to save the generated code.")
         useForceUnwrapping = parser.add(option: "--forceUnwrap", shortName: "", kind: Bool.self, usage: "If passed, the code will force unwrap the color in its implementation.")
         functionPrefix = parser.add(option: "--prefix", shortName: "-fp", kind: String.self, usage: "An optional prefix to apply to each function's header.")
+        frameworkChoice = parser.add(option: "--SwiftUI", shortName: "-sw", kind: Bool.self, usage: "If set to true, SwiftUI extensions will be generated. Otherwise, UIKit extensions are created by default.")
     }
     
     // MARK: Public API
@@ -42,11 +45,13 @@ public struct CommandLineUtil {
             let saveLocation = parsedArguments.get(targetSaveLocation) ?? ""
             let prefersForceUnwrap = parsedArguments.get(useForceUnwrapping) ?? false
             let prefix = parsedArguments.get(functionPrefix) ?? ""
+            let wantsSwiftUIExtensions = parsedArguments.get(frameworkChoice) ?? false
             
             return FileGenOptions(targetDirectory: projectDirectory,
                                   targetSaveLocation: saveLocation,
                                   useForceUnwrap: prefersForceUnwrap,
-                                  functionPrefix: prefix)
+                                  functionPrefix: prefix,
+                                  useSwiftUI: wantsSwiftUIExtensions)
         }
         catch let error as ArgumentParserError {
             print(error.description)
@@ -59,15 +64,16 @@ public struct CommandLineUtil {
     }
     
     public func debugValues() -> FileGenOptions {
-        let projectDirectory = "users/jordan/documents/buffer/crossover-ios/app/crossover/assets.xcassets/"
-        let saveLocation = "users/jordan/documents/buffer/crossover-ios/app/crossover/"
+        let projectDirectory = "/Users/jordanmorgan/Documents/Buffer/buffer-ios/App/Buffer/Colors.xcassets"
+        let saveLocation = "/Users/jordanmorgan/Documents/Buffer/buffer-ios/App/Buffer/Swift Extensions/"
         let prefersForceUnwrap = false
         let prefix = "bfr_"
         
         return FileGenOptions(targetDirectory: projectDirectory,
                               targetSaveLocation: saveLocation,
                               useForceUnwrap: prefersForceUnwrap,
-                              functionPrefix: prefix)
+                              functionPrefix: prefix,
+                              useSwiftUI: false)
     }
 }
 
@@ -77,5 +83,6 @@ public struct FileGenOptions {
     var targetSaveLocation:String = ""
     var useForceUnwrap:Bool = false
     var functionPrefix:String = ""
+    var useSwiftUI:Bool = false
 }
 
