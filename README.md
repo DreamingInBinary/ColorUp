@@ -1,6 +1,3 @@
-# ColorUp
-An easy way to generate an extension for `UIColor` based off of your colors within the project's asset catalog.
-
 <p align="center">
   <img src="/hero.png?raw=true" alt="Header Image" />
 </p>
@@ -9,11 +6,25 @@ An easy way to generate an extension for `UIColor` based off of your colors with
 At [Buffer](https://www.buffer.com) we use color catalogs extensively across our own iOS apps. But, we find that we often can mistype the names (resulting in a nil color instance) and that we have quite a few of them. This is the main problem we set out to solve. Using a generator such as this gives us the flexibility of color catalogs with the advantages of concrete function calls:
 
 ```swift
-// Before
-let aColor = UIColor(named: "iHopeITypedThisRight")
+// Before 😅
 
-// After
+// UIKit. If you mess this up or force unwrap, you could crash.
+let aColor = UIColor(named: "iHopeITypedThisRight") 
+
+// SwiftUI. If you mess this one up, you'll get primary text by default.
+Text(stepToDo.backingModel.stepAbstract ?? "")
+                .lineLimit(nil)
+                .foregroundColor(Color("gettingStartedTextSubhead"))
+
+// After. Strongly typed colors, no chance of typos. 😊
+
+// UIKit
 let aColor = UIColor.namedColor
+
+// SwiftUI
+Text(stepToDo.backingModel.stepAbstract ?? "")
+                .lineLimit(nil)
+                .foregroundColor(.gettingStartedTextSubhead)
 ```
 
 There are other things in the pipeline for the future, such as supporting Objective-C and bundle asset catalog lookups, but this is our start!
@@ -39,7 +50,7 @@ Here is what a command would look like:
 $ swift run ColorUp -p "users/jordan/documents/anApp/assets.xcassets/" -s "users/jordan/documents/anApp/extensions/"
 ```
 
-If the asset catalog has one color named "MyColor", the result would look like this:
+If the asset catalog has one color named "MyColor", the result would look like this for UIKit (and similar for SwiftUI):
 ```swift
 //
 //  ColorCatalogExtensions.swift
@@ -67,13 +78,13 @@ $ cp .build/release/ColorUp /usr/local/bin/ColorUp
 This allows you to just open Terminal and run it from anywhere.
 ### Options
 
-**Xcode Project: Required**
+**Xcode Project: <span style="color: red;">Required</span>**
 ```bash
 --project "path/to/project"
 ```
 The complete path to the asset catalog that contains the colors you wish to generate an extension file for.
 
-**Save Locatiom: Required**
+**Save Location:<span style="color: red;"> Required</span>**
 ```bash
 --saveLocation "path/to/save/extension"
 ```
@@ -83,7 +94,7 @@ The complete path where you wish to save the file at.
 ```bash
 --forceUnwrap
 ```
-Use this option to generate a force-unwrapped color call.
+Use this option to generate a force-unwrapped color call. Note that SwiftUI code will ignore this option, as it's `Color(name)` initializer doesn't produce an optional type.
 Example:
 ```swift
 class var MyColor : UIColor {
@@ -104,14 +115,26 @@ class var MyColor : UIColor? {
 Puts the supplied string in front of the generated functions. 
 Example:
 ```swift
+// UIKit
 class var aPrefixMyColor : UIColor {
   return UIColor(named: "MyColor")!
+}
+
+// SwiftUI
+static var aPrefixMyColor: Color {
+  return Color("MyColor")
 }
 ```
 versus the default:
 ```swift
+// UIKit
 class var MyColor : UIColor? {
   return UIColor(named: "MyColor")
+}
+
+// SwiftUI
+static var MyColor: Color {
+  return Color("MyColor")
 }
 ```
 
@@ -119,7 +142,13 @@ class var MyColor : UIColor? {
 ```bash
 --fileName "GeneratedColors"
 ```
-The name of the generated file containing the extensions. Defaults to `ColorCatalogExtensions`. 
+The name of the generated file containing the extensions. Defaults to `ColorCatalogExtensions-UIKit.swift` for UIKit, and `ColorCatalogExtensions-SwiftUI.swift` for SwiftUI. 
+
+**Generate SwiftUI Code: Optional**
+```bash
+--SwiftUI 
+```
+A `boolean`, if present the generated code is for SwiftUI's `Color` type. If not, it'll default to UIKit and `UIColor`.
 
 ### Contributing
 ColorUp welcomes anyone to contribute. Here's a quick start guide:
